@@ -23,8 +23,7 @@ RUN apt-get update && \
 # Build debos
 COPY . $GOPATH/src/github.com/go-debos/debos
 WORKDIR $GOPATH/src/github.com/go-debos/debos/cmd/debos
-RUN go get -d ./... && \
-    go get -d github.com/stretchr/testify && \
+RUN go get -d -t ../../... && \
     go install
 
 ### second stage - runner ###

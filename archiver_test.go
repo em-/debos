@@ -4,6 +4,8 @@ import (
 	_ "fmt"
 	"github.com/go-debos/debos"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os/user"
 	_ "reflect"
 	_ "strings"
 	"testing"
@@ -127,6 +129,18 @@ func TestDeb_notexisting(t *testing.T) {
 	assert.EqualError(t, err, "mkdir /proc/debostest: no such file or directory")
 	err = archive.RelaxedUnpack("/tmp/test")
 	assert.EqualError(t, err, "exit status 2")
+}
+
+func TestDeb(t *testing.T) {
+	u, err := user.Current()
+	if u.Uid != "0" {
+		t.Skip("skipping test; needs to be run as UID 0")
+	}
+	archive, err := debos.NewArchive("testdata/hello_2.10-2_amd64.deb")
+	dir, err := ioutil.TempDir("", "debos-test-")
+	assert.Empty(t, err)
+	err = archive.Unpack(dir)
+	assert.Empty(t, err)
 }
 
 func TestZip_notexisting(t *testing.T) {

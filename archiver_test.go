@@ -1,10 +1,13 @@
 package debos_test
 
 import (
-	_ "fmt"
+	"bytes"
+	"fmt"
 	"github.com/go-debos/debos"
+	"github.com/pkg/xattr"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"os"
 	"os/user"
 	_ "reflect"
 	_ "strings"
@@ -67,6 +70,58 @@ func TestTar_default(t *testing.T) {
 	// Add wrong option
 	err = archive.AddOption("someoption", "somevalue")
 	assert.EqualError(t, err, "Option 'someoption' is not supported for tar archive type")
+}
+
+func checkXAttrActuallyWork(t *testing.T, tmpDir string) error {
+	// ensure that tmpDir points to a filesystem where xattr are supported
+	f, err := ioutil.TempFile(tmpDir, "")
+	if err != nil {
+		return fmt.Errorf("unable to create temporary file: %v", err)
+	}
+	defer os.Remove(f.Name())
+	assert.Empty(t, err)
+	// this should roughly match the `cap_sys_pacct+p` capabilities set on
+	// `test-xattr` in `testdata/test.tar.gz`
+	xattrName := "security.capability"
+	xattrValue := []byte{0, 0, 0, 2, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	err = xattr.Set(f.Name(), xattrName, xattrValue)
+	if err != nil {
+		return err
+	}
+	readbackValue, err := xattr.Get(f.Name(), xattrName)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(xattrValue, readbackValue) {
+		return fmt.Errorf("unable to read back the configured attribute")
+	}
+	return nil
+}
+
+func TestTar_extraction_xattr(t *testing.T) {
+	u, err := user.Current()
+	assert.Empty(t, err)
+	if u.Uid != "0" {
+		t.Skip("skipping test; needs to be run as UID 0")
+	}
+
+	tmpDir := ""
+	// check that the default temporary directory supports setting xattrs
+	err = checkXAttrActuallyWork(t, tmpDir)
+	if err != nil {
+		t.Skip("skipping test; xattr support unavailable:", err)
+	}
+
+	archive, err := debos.NewArchive("testdata/test.tar.gz")
+	dir, err := ioutil.TempDir(tmpDir, "debos-test-")
+	assert.Empty(t, err)
+	err = archive.Unpack(dir)
+	assert.Empty(t, err)
+	path := dir + "/test-xattr"
+	var data []byte
+	data, err = xattr.Get(path, "security.capability")
+	assert.Empty(t, err)
+	assert.NotNil(t, data)
 }
 
 // Check supported compression types

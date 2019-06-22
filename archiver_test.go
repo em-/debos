@@ -35,7 +35,7 @@ func TestTar_default(t *testing.T) {
 
 	// New archive
 	// Expect Tar by default
-	archive, err := debos.NewArchive("test.tar.gz")
+	archive, err := debos.NewArchive("doesnotexists.tar.gz")
 	assert.NotEmpty(t, archive)
 	assert.Empty(t, err)
 
@@ -70,13 +70,13 @@ func TestTar_default(t *testing.T) {
 // Check supported compression types
 func TestTar_compression(t *testing.T) {
 	compressions := map[string]string{
-		"gz":    "tar -C test -x -z -f test.tar.gz",
-		"bzip2": "tar -C test -x -j -f test.tar.gz",
-		"xz":    "tar -C test -x -J -f test.tar.gz",
+		"gz":    "tar -C test -x -z -f doesnotexists.tar.gz",
+		"bzip2": "tar -C test -x -j -f doesnotexists.tar.gz",
+		"xz":    "tar -C test -x -J -f doesnotexists.tar.gz",
 	}
 
 	// Force type
-	archive, err := debos.NewArchive("test.tar.gz", debos.Tar)
+	archive, err := debos.NewArchive("doesnotexists.tar.gz", debos.Tar)
 	assert.NotEmpty(t, archive)
 	assert.Empty(t, err)
 	// Type must be Tar
@@ -100,10 +100,10 @@ func TestTar_compression(t *testing.T) {
 	assert.EqualError(t, err, "Wrong type for value")
 }
 
-func TestDeb(t *testing.T) {
+func TestDeb_notexisting(t *testing.T) {
 
 	// Guess Deb
-	archive, err := debos.NewArchive("test.deb")
+	archive, err := debos.NewArchive("doesnotexists.deb")
 	assert.NotEmpty(t, archive)
 	assert.Empty(t, err)
 
@@ -112,7 +112,7 @@ func TestDeb(t *testing.T) {
 	assert.Equal(t, debos.Deb, arcType)
 
 	// Force Deb type
-	archive, err = debos.NewArchive("test.deb", debos.Deb)
+	archive, err = debos.NewArchive("doesnotexists.deb", debos.Deb)
 	assert.NotEmpty(t, archive)
 	assert.Empty(t, err)
 
@@ -129,9 +129,9 @@ func TestDeb(t *testing.T) {
 	assert.EqualError(t, err, "exit status 2")
 }
 
-func TestZip(t *testing.T) {
+func TestZip_notexisting(t *testing.T) {
 	// Guess zip
-	archive, err := debos.NewArchive("test.ZiP")
+	archive, err := debos.NewArchive("doesnotexists.ZiP")
 	assert.NotEmpty(t, archive)
 	assert.Empty(t, err)
 	// Type must be guessed as Zip
@@ -139,7 +139,7 @@ func TestZip(t *testing.T) {
 	assert.Equal(t, debos.Zip, arcType)
 
 	// Force Zip type
-	archive, err = debos.NewArchive("test.zip", debos.Zip)
+	archive, err = debos.NewArchive("doesnotexists.zip", debos.Zip)
 	assert.NotEmpty(t, archive)
 	assert.Empty(t, err)
 

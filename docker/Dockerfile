@@ -17,13 +17,16 @@ RUN apt-get update && \
         git \
         golang-go \
         libc6-dev \
-        libostree-dev && \
+        libostree-dev \
+        unzip \
+        && \
     rm -rf /var/lib/apt/lists/*
 
 # Build debos
 COPY . $GOPATH/src/github.com/go-debos/debos
 WORKDIR $GOPATH/src/github.com/go-debos/debos/cmd/debos
 RUN go get -d -t ../../... && \
+    go test ../.. ../../actions -v && \
     go install
 
 ### second stage - runner ###
